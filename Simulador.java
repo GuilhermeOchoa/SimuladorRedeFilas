@@ -1,6 +1,8 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,7 +36,63 @@ public class Simulador {
         // Cria o escalonador
         this.escalonador = new Escalonador(filas, matrizRoteamento, gerador);
     }
-    
+    /**
+ * Gera o relatório da simulação em um arquivo de texto
+ * @param nomeArquivo Nome do arquivo de saída
+ */
+public void gerarRelatorioArquivo(String nomeArquivo) {
+    try (PrintWriter writer = new PrintWriter(new FileWriter(nomeArquivo))) {
+        writer.println("=========================================================");
+        writer.println("=================    END OF SIMULATION   ================");
+        writer.println("=========================================================");
+        writer.println("=========================================================");
+        writer.println("======================    REPORT   ======================");
+        writer.println("=========================================================");
+        
+        for (int i = 0; i < filas.size(); i++) {
+            Fila fila = filas.get(i);
+            writer.println("*********************************************************");
+            
+            // Nome da fila e caracterização
+            String nomeConfig;
+            if (i == 0) {
+                nomeConfig = String.format("FILA1 (G/G/1)");
+                writer.println("Queue:   " + nomeConfig);
+                writer.printf("Arrival: %.1f ... %.1f\n", fila.getMinChegada(), fila.getMaxChegada());
+            } else if (i == 1) {
+                nomeConfig = String.format("FILA2 (G/G/2/5)");
+                writer.println("Queue:   " + nomeConfig);
+            } else {
+                nomeConfig = String.format("FILA3 (G/G/2/10)");
+                writer.println("Queue:   " + nomeConfig);
+            }
+            
+            writer.printf("Service: %.1f ... %.1f\n", fila.getMinAtendimento(), fila.getMaxAtendimento());
+            writer.println("*********************************************************");
+            
+            // Tabela de estados
+            writer.println("   State               Time               Probability");
+            
+            double[] temposEstado = fila.getTemposEstado();
+            for (int j = 0; j < temposEstado.length; j++) {
+                double probabilidade = (temposEstado[j] / tempoSimulacao) * 100;
+                writer.printf("      %d           %10.4f                %5.2f%%\n", 
+                             j, temposEstado[j], probabilidade);
+            }
+            
+            // Número de perdas
+            writer.println("Number of losses: " + fila.getPerdidos());
+        }
+        
+        writer.println("=========================================================");
+        writer.printf("Simulation average time: %.4f\n", tempoSimulacao);
+        writer.println("=========================================================");
+        
+        System.out.println("Relatório gerado com sucesso no arquivo: " + nomeArquivo);
+    } catch (IOException e) {
+        System.err.println("Erro ao gerar relatório: " + e.getMessage());
+    }
+}
     /**
      * Carrega a configuração das filas do arquivo
      * @param arquivo Nome do arquivo de configuração
