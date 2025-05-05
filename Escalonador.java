@@ -3,325 +3,197 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 /**
- * Classe responsável pelo escalonamento de eventos na simulação.
- * Mantém uma fila de prioridade de eventos ordenados pelo tempo.
- * Versão atualizada para incluir estatísticas de estados por fila.
+ * Classe Escalonador - responsável por gerenciar a agenda de eventos
+ * e controlar o avanço do tempo de simulação.
  */
 public class Escalonador {
-    private PriorityQueue<Evento> filaEventos;    // Fila de prioridade para eventos
-    private double tempoAtual;                    // Tempo atual da simulação
-    private double tempoFinalSimulacao;           // Tempo final da simulação
-    private List<Fila> filas;                     // Lista de filas no sistema
-    private GeradorNumerosPseudoAleatorios gerador; // Gerador de números aleatórios
+    private final PriorityQueue<Evento> eventos;
+    private final List<Fila> filas;
+    private final GeradorAleatorio gerador;
+    private final double[][] matrizRoteamento;
     
-    // Estatísticas globais
-    private int totalClientesProcessados;         // Total de clientes que passaram pelo sistema
-    private int totalClientesRejeitados;          // Total de clientes que não entraram no sistema
-    private int totalClientesConcluidos;          // Total de clientes que saíram do sistema
+    private double tempoAtual;
+    private double tempoUltimoEvento;
+    private int numFilas;
     
-    /**
-     * Construtor do escalonador
-     * @param tempoFinalSimulacao Tempo limite da simulação
-     * @param semente Semente para o gerador de números aleatórios
-     */
-    public Escalonador(double tempoFinalSimulacao, long semente) {
-        this.filaEventos = new PriorityQueue<>();
+    public Escalonador(List<Fila> filas, double[][] matrizRoteamento, GeradorAleatorio gerador) {
+        this.filas = filas;
+        this.matrizRoteamento = matrizRoteamento;
+        this.gerador = gerador;
+        this.eventos = new PriorityQueue<>();
         this.tempoAtual = 0.0;
-        this.tempoFinalSimulacao = tempoFinalSimulacao;
-        this.filas = new ArrayList<>();
-        this.gerador = new GeradorNumerosPseudoAleatorios();
-        this.gerador.reiniciar(semente);
-        
-        this.totalClientesProcessados = 0;
-        this.totalClientesRejeitados = 0;
-        this.totalClientesConcluidos = 0;
+        this.tempoUltimoEvento = 0.0;
+        this.numFilas = filas.size();
     }
     
     /**
-     * Adiciona uma fila ao sistema
-     * @param fila Fila a ser adicionada
+     * Inicializa o escalonador, agendando o primeiro evento
+     * @param tempoInicial Tempo da primeira chegada
      */
-    public void adicionarFila(Fila fila) {
-        filas.add(fila);
+    public void inicializar(double tempoInicial) {
+        // Agenda o primeiro evento (chegada do primeiro cliente)
+        agendarChegada(0, tempoInicial); // Primeira chegada no tempo especificado
     }
     
     /**
-     * Inicializa a simulação, agendando os eventos iniciais de chegada
+     * Executa a simulação até que não haja mais eventos ou
+     * até que o número máximo de aleatórios seja atingido
+     * @param maxAleatorios Número máximo de aleatórios a serem usados
+     * @return Tempo total da simulação
      */
-    public void inicializar() {
-        // Agenda chegadas iniciais para todas as filas de entrada
-        for (Fila fila : filas) {
-            if (fila.isFilaDeEntrada()) {
-                double tempoProximaChegada = fila.gerarTempoChegada(gerador);
-                agendarEvento(new Evento(Evento.TipoEvento.CHEGADA, tempoProximaChegada, fila.getId()));
+    public double executar(int maxAleatorios) {
+        while (!eventos.isEmpty() && gerador.getContador() < maxAleatorios) {
+            // Obtém o próximo evento
+            Evento evento = eventos.poll();
+            
+            // Calcula o tempo decorrido desde o último evento
+            double tempoDecorrido = evento.getTempo() - tempoAtual;
+            
+            // Atualiza os tempos de estado para todas as filas
+            for (int i = 0; i < filas.size(); i++) {
+                Fila fila = filas.get(i);
+                fila.atualizarTempoEstado(tempoDecorrido);
             }
-        }
-    }
-    
-    /**
-     * Agenda um evento na fila de prioridade
-     * @param evento Evento a ser agendado
-     */
-    public void agendarEvento(Evento evento) {
-        if (evento.getTempo() <= tempoFinalSimulacao) {
-            filaEventos.add(evento);
-        }
-    }
-    
-    /**
-     * Executa a simulação até o tempo final
-     */
-    public void executarSimulacao() {
-        System.out.println("Iniciando simulação...");
-        
-        while (!filaEventos.isEmpty()) {
-            Evento evento = filaEventos.poll();
+            
+            // Atualiza o tempo atual
+            tempoUltimoEvento = tempoAtual;
             tempoAtual = evento.getTempo();
             
-            if (tempoAtual > tempoFinalSimulacao) {
-                break;
-            }
-            
+            // Processa o evento
             processarEvento(evento);
-            
-            // Log periódico (opcional)
-            if (totalClientesProcessados % 1000 == 0 && totalClientesProcessados > 0) {
-                System.out.printf("Tempo: %.2f, Clientes processados: %d%n", 
-                        tempoAtual, totalClientesProcessados);
-            }
         }
         
-        // Finaliza a coleta de estatísticas para todas as filas
-        for (Fila fila : filas) {
-            fila.finalizarEstatisticas(tempoAtual);
-        }
-        
-        System.out.println("Simulação concluída!");
-        imprimirResultados();
+        return tempoAtual; // Retorna o tempo total da simulação
     }
     
     /**
-     * Processa um evento da simulação
+     * Processa um evento específico
      * @param evento Evento a ser processado
      */
     private void processarEvento(Evento evento) {
         switch (evento.getTipo()) {
-            case CHEGADA:
+            case Evento.CHEGADA:
                 processarChegada(evento);
                 break;
-                
-            case PASSAGEM:
-                processarPassagem(evento);
-                break;
-                
-            case SAIDA:
+            case Evento.SAIDA:
                 processarSaida(evento);
                 break;
         }
     }
     
     /**
-     * Processa um evento de chegada de cliente do exterior
+     * Processa um evento de chegada
      * @param evento Evento de chegada
      */
     private void processarChegada(Evento evento) {
-        int filaDestinoId = evento.getFilaDestinoId();
-        Fila filaDestino = filas.get(filaDestinoId);
+        int filaDestino = evento.getFilaDestino();
         
-        // Agenda a próxima chegada para esta fila
-        double tempoProximaChegada = tempoAtual + filaDestino.gerarTempoChegada(gerador);
-        agendarEvento(new Evento(Evento.TipoEvento.CHEGADA, tempoProximaChegada, filaDestinoId));
+        if (filaDestino <= 0 || filaDestino > numFilas) {
+            return; // Fila inválida
+        }
         
-        // Tenta adicionar o cliente à fila
-        boolean clienteAceito = filaDestino.adicionarCliente(tempoAtual);
-        totalClientesProcessados++;
+        Fila fila = filas.get(filaDestino - 1); // Ajuste de índice
         
-        if (clienteAceito) {
-            // Se a fila tem servidores disponíveis, agenda o atendimento
-            if (filaDestino.getServidoresOcupados() <= filaDestino.getNumServidores()) {
-                agendarAtendimento(filaDestino);
+        if (fila.podeAceitarCliente()) {
+            fila.In(); // Coloca o cliente na fila
+            
+            // Se há servidor disponível, agenda saída imediatamente
+            if (fila.Status() <= fila.Servers()) {
+                double tempoAtendimento = fila.getMinAtendimento() + 
+                      (fila.getMaxAtendimento() - fila.getMinAtendimento()) * gerador.nextRandom();
+                agendarSaida(filaDestino, tempoAtual + tempoAtendimento);
             }
         } else {
-            totalClientesRejeitados++;
+            fila.Loss(); // Cliente perdido por fila cheia
+        }
+        
+        // Agenda a próxima chegada externa se for do mundo externo para fila 1
+        if (evento.getFilaOrigem() == 0 && filaDestino == 1) {
+            double tempoProximaChegada = fila.getMinChegada() + 
+                  (fila.getMaxChegada() - fila.getMinChegada()) * gerador.nextRandom();
+            agendarChegada(0, tempoAtual + tempoProximaChegada);
         }
     }
     
     /**
-     * Processa um evento de passagem de cliente entre filas
-     * @param evento Evento de passagem
-     */
-    private void processarPassagem(Evento evento) {
-        int filaOrigemId = evento.getFilaOrigemId();
-        int filaDestinoId = evento.getFilaDestinoId();
-        
-        Fila filaOrigem = filas.get(filaOrigemId);
-        Fila filaDestino = filas.get(filaDestinoId);
-        
-        // Remove o cliente da fila de origem
-        filaOrigem.removerCliente(tempoAtual);
-        
-        // Se há clientes em espera na fila de origem, agenda atendimento para o próximo
-        if (filaOrigem.getNumClientes() > 0 && 
-            filaOrigem.getServidoresOcupados() < filaOrigem.getNumServidores()) {
-            agendarAtendimento(filaOrigem);
-        }
-        
-        // Tenta adicionar o cliente à fila de destino
-        boolean clienteAceito = filaDestino.adicionarCliente(tempoAtual);
-        
-        if (clienteAceito) {
-            // Se a fila tem servidores disponíveis, agenda o atendimento
-            if (filaDestino.getServidoresOcupados() <= filaDestino.getNumServidores()) {
-                agendarAtendimento(filaDestino);
-            }
-        } else {
-            // Cliente rejeitado por fila cheia
-            // Observe que este cliente já foi contado como processado,
-            // mas não foi aceito na fila de destino
-        }
-    }
-    
-    /**
-     * Processa um evento de saída de cliente do sistema
+     * Processa um evento de saída
      * @param evento Evento de saída
      */
     private void processarSaida(Evento evento) {
-        int filaOrigemId = evento.getFilaOrigemId();
-        Fila filaOrigem = filas.get(filaOrigemId);
+        int filaOrigem = evento.getFilaOrigem();
         
-        // Remove o cliente da fila de origem
-        filaOrigem.removerCliente(tempoAtual);
-        totalClientesConcluidos++;
-        
-        // Se há clientes em espera na fila de origem, agenda atendimento para o próximo
-        if (filaOrigem.getNumClientes() > 0 && 
-            filaOrigem.getServidoresOcupados() < filaOrigem.getNumServidores()) {
-            agendarAtendimento(filaOrigem);
+        if (filaOrigem <= 0 || filaOrigem > numFilas) {
+            return; // Fila inválida
         }
-    }
-    
-    /**
-     * Agenda um atendimento para a fila especificada
-     * @param fila Fila que terá um cliente atendido
-     */
-    private void agendarAtendimento(Fila fila) {
-        // Gera o tempo de serviço
-        double tempoServico = fila.gerarTempoServico(gerador);
-        double tempoAtendimento = tempoAtual + tempoServico;
         
-        // Determina para qual fila o cliente irá depois do atendimento
-        int proximaFilaId = fila.escolherProximaRota(gerador);
+        Fila fila = filas.get(filaOrigem - 1); // Ajuste de índice
         
-        // Cria o evento adequado (PASSAGEM ou SAIDA)
-        Evento eventoAtendimento;
-        if (proximaFilaId == -1) {
-            // Cliente sai do sistema
-            eventoAtendimento = new Evento(Evento.TipoEvento.SAIDA, tempoAtendimento, fila.getId(), -1);
-        } else {
+        // Cliente sai da fila
+        fila.Out();
+        
+        // Se ainda há clientes além do número de servidores, agenda nova saída
+        if (fila.Status() >= fila.Servers()) {
+            double tempoAtendimento = fila.getMinAtendimento() + 
+                  (fila.getMaxAtendimento() - fila.getMinAtendimento()) * gerador.nextRandom();
+            agendarSaida(filaOrigem, tempoAtual + tempoAtendimento);
+        }
+        
+        // Determina para onde o cliente vai após sair da fila
+        double probabilidade = gerador.nextRandom();
+        double acumulado = 0.0;
+        
+        int proximaFila = 0; // 0 representa saída do sistema por padrão
+        
+        for (int i = 0; i <= numFilas; i++) {
+            acumulado += matrizRoteamento[filaOrigem][i];
+            if (probabilidade <= acumulado) {
+                proximaFila = i;
+                break;
+            }
+        }
+        
+        if (proximaFila > 0) {
             // Cliente vai para outra fila
-            eventoAtendimento = new Evento(Evento.TipoEvento.PASSAGEM, tempoAtendimento, fila.getId(), proximaFilaId);
+            agendarChegada(filaOrigem, tempoAtual, proximaFila);
         }
-        
-        // Agenda o evento
-        agendarEvento(eventoAtendimento);
+        // Se proximaFila == 0, o cliente sai do sistema (não é necessário agendar evento)
     }
     
     /**
-     * Imprime os resultados da simulação
+     * Agenda um evento de chegada na primeira fila
+     * @param filaOrigem Fila de origem (0 para mundo externo)
+     * @param tempo Tempo do evento
      */
-    public void imprimirResultados() {
-        System.out.println("\n===== RESULTADOS DA SIMULAÇÃO =====");
-        System.out.printf("Tempo total simulado: %.2f%n", tempoAtual);
-        System.out.printf("Total de clientes processados: %d%n", totalClientesProcessados);
-        System.out.printf("Total de clientes rejeitados: %d (%.2f%%)%n", 
-                totalClientesRejeitados, 
-                (double) totalClientesRejeitados / Math.max(1, totalClientesProcessados) * 100);
-        System.out.printf("Total de clientes que concluíram o atendimento: %d%n", totalClientesConcluidos);
-        
-        System.out.println("\n----- Estatísticas por Fila -----");
-        for (Fila fila : filas) {
-            System.out.println(fila);
-            System.out.printf("  Clientes atendidos: %d%n", fila.getTotalClientesAtendidos());
-            System.out.printf("  Clientes perdidos: %d%n", fila.getTotalClientesPerdidos());
-            System.out.printf("  Tempo médio de espera: %.2f%n", fila.getTempoMedioEspera(tempoAtual));
-            System.out.printf("  Taxa de utilização de servidores: %.2f%%%n", 
-                    fila.getTaxaUtilizacaoServidores(tempoAtual) * 100);
-            System.out.println();
-        }
-        
-        System.out.println("\n----- Distribuição de Estados por Fila -----");
-        for (Fila fila : filas) {
-            System.out.println(fila.gerarDistribuicaoEstados(tempoAtual));
-            System.out.println();
-        }
+    private void agendarChegada(int filaOrigem, double tempo) {
+        // Agenda chegada na primeira fila (do mundo externo)
+        eventos.add(new Evento(tempo, Evento.CHEGADA, 0, filaOrigem, 1));
     }
     
     /**
-     * Retorna uma representação textual das filas do sistema
-     * @return String com a descrição das filas
+     * Agenda um evento de chegada em uma fila específica
+     * @param filaOrigem Fila de origem
+     * @param tempo Tempo do evento
+     * @param filaDestino Fila de destino
      */
-    public String representacaoTextualFilas() {
-        StringBuilder sb = new StringBuilder();
-        
-        sb.append("Estado atual das filas:\n");
-        for (Fila fila : filas) {
-            sb.append(fila.toString()).append("\n");
-        }
-        
-        return sb.toString();
+    private void agendarChegada(int filaOrigem, double tempo, int filaDestino) {
+        // Agenda chegada de um cliente que vem de outra fila
+        eventos.add(new Evento(tempo, Evento.CHEGADA, 0, filaOrigem, filaDestino));
     }
     
-    // Getters para estatísticas
+    /**
+     * Agenda um evento de saída
+     * @param filaOrigem Fila de origem
+     * @param tempo Tempo do evento
+     */
+    private void agendarSaida(int filaOrigem, double tempo) {
+        eventos.add(new Evento(tempo, Evento.SAIDA, 0, filaOrigem, -1));
+    }
     
+    /**
+     * Obtém o tempo atual da simulação
+     * @return Tempo atual
+     */
     public double getTempoAtual() {
         return tempoAtual;
-    }
-    
-    public int getTotalClientesProcessados() {
-        return totalClientesProcessados;
-    }
-    
-    public int getTotalClientesRejeitados() {
-        return totalClientesRejeitados;
-    }
-    
-    public int getTotalClientesConcluidos() {
-        return totalClientesConcluidos;
-    }
-    
-    public List<Fila> getFilas() {
-        return filas;
-    }
-    
-    public double getTempoFinalSimulacao() {
-        return tempoFinalSimulacao;
-    }
-    
-    /**
-     * Salva os resultados da simulação em um formato específico
-     * @return String com os resultados formatados
-     */
-    public String salvarResultados() {
-        StringBuilder sb = new StringBuilder();
-        
-        sb.append("Resultados da Simulação\n");
-        sb.append("======================\n\n");
-        
-        sb.append(String.format("Tempo total simulado: %.2f\n", tempoAtual));
-        sb.append(String.format("Total de clientes processados: %d\n", totalClientesProcessados));
-        sb.append(String.format("Total de clientes rejeitados: %d (%.2f%%)\n", 
-                totalClientesRejeitados, 
-                (double) totalClientesRejeitados / Math.max(1, totalClientesProcessados) * 100));
-        sb.append(String.format("Total de clientes que concluíram: %d\n\n", totalClientesConcluidos));
-        
-        sb.append("Distribuição de Estados por Fila\n");
-        sb.append("===============================\n\n");
-        
-        for (Fila fila : filas) {
-            sb.append(fila.gerarDistribuicaoEstados(tempoAtual));
-            sb.append("\n\n");
-        }
-        
-        return sb.toString();
     }
 }
