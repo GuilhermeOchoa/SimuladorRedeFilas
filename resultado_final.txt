@@ -1,0 +1,89 @@
+Resultado da Fila 1: G/G/1, atendimento entre 1,0..2,0:
+Clientes processados: 1150884
+Clientes perdidos: 0
+Distribuição de probabilidades dos estados:
+Estado 0: 0,02% (Tempo: 15,20)
+Estado 1: 0,12% (Tempo: 116,40)
+Estado 2: 0,35% (Tempo: 351,54)
+Estado 3: 0,91% (Tempo: 911,20)
+Estado 4: 1,98% (Tempo: 1977,08)
+Estado 5: 3,19% (Tempo: 3189,38)
+Estado 6: 5,09% (Tempo: 5094,05)
+Estado 7: 6,32% (Tempo: 6318,92)
+Estado 8: 7,82% (Tempo: 7816,23)
+Estado 9: 8,77% (Tempo: 8774,34)
+Estado 10: 9,33% (Tempo: 9334,44)
+Estado 11: 9,38% (Tempo: 9381,65)
+Estado 12: 8,76% (Tempo: 8758,83)
+Estado 13: 7,85% (Tempo: 7851,54)
+Estado 14: 7,09% (Tempo: 7090,29)
+Estado 15: 5,71% (Tempo: 5705,67)
+Estado 16: 4,70% (Tempo: 4697,46)
+Estado 17: 3,38% (Tempo: 3377,87)
+Estado 18: 2,81% (Tempo: 2809,16)
+Estado 19: 1,97% (Tempo: 1965,69)
+Estado 20: 1,40% (Tempo: 1404,75)
+Estado 21: 0,93% (Tempo: 931,30)
+Estado 22: 0,71% (Tempo: 707,05)
+Estado 23: 0,52% (Tempo: 519,35)
+Estado 24: 0,33% (Tempo: 326,88)
+Estado 25: 0,18% (Tempo: 178,56)
+Estado 26: 0,15% (Tempo: 146,45)
+Estado 27: 0,09% (Tempo: 91,87)
+Estado 28: 0,04% (Tempo: 43,54)
+Estado 29: 0,05% (Tempo: 49,35)
+Estado 30: 0,03% (Tempo: 28,70)
+Estado 31: 0,02% (Tempo: 15,50)
+Estado 32: 0,01% (Tempo: 8,98)
+Estado 33: 0,00% (Tempo: 3,97)
+Estado 34: 0,00% (Tempo: 1,72)
+Estado 35: 0,00% (Tempo: 2,35)
+Estado 36: -0,00% (Tempo: -1,10)
+Estado 37: 0,00% (Tempo: 2,93)
+Estado 38: 0,00% (Tempo: 0,29)
+Estado 39: -0,00% (Tempo: -1,27)
+Estado 40: 0,00% (Tempo: 1,57)
+Estado 41: 0,00% (Tempo: 0,11)
+Estado 42: 0,00% (Tempo: 0,06)
+Estado 43: 0,00% (Tempo: 0,02)
+
+Tempo Total de Simulação: 99999,89
+
+
+** **
+** **
+
+Resultado da Fila 2: G/G/2/5, atendimento entre 4,0..8,0:
+Clientes processados: 927752
+Clientes perdidos: 107335
+Distribuição de probabilidades dos estados:
+Estado 0: -18,41% (Tempo: -18410,92)
+Estado 1: 33,04% (Tempo: 33041,96)
+Estado 2: 20,31% (Tempo: 20313,30)
+Estado 3: 18,74% (Tempo: 18742,73)
+Estado 4: 17,62% (Tempo: 17620,90)
+Estado 5: 28,69% (Tempo: 28691,91)
+
+Tempo Total de Simulação: 99999,89
+
+
+** **
+** **
+
+Resultado da Fila 3: G/G/2/10, atendimento entre 5,0..15,0:
+Clientes processados: 382217
+Clientes perdidos: 18116
+Distribuição de probabilidades dos estados:
+Estado 0: 86,94% (Tempo: 86937,15)
+Estado 1: -33,81% (Tempo: -33808,43)
+Estado 2: 10,09% (Tempo: 10085,99)
+Estado 3: 9,59% (Tempo: 9593,95)
+Estado 4: 8,05% (Tempo: 8050,83)
+Estado 5: 7,65% (Tempo: 7652,09)
+Estado 6: 5,74% (Tempo: 5740,34)
+Estado 7: 5,90% (Tempo: 5901,31)
+Estado 8: 4,42% (Tempo: 4415,62)
+Estado 9: 3,97% (Tempo: 3970,98)
+Estado 10: -8,54% (Tempo: -8539,95)
+
+Tempo Total de Simulação: 99999,89

@@ -1,0 +1,36 @@
+# Configuração ajustada para simulação da rede de filas com 3 nós
+# Otimizada para corresponder aos resultados:
+# - Total de clientes processados: 15624
+# - Total de clientes rejeitados: 947 (6.06%)
+# - Total de clientes que concluíram: 3451
+
+tempo_simulacao = 100000.0
+semente = 42
+
+# Fila 0 (G/G/1)
+fila.0.capacidade = -1
+fila.0.servidores = 1
+fila.0.tempo_servico_min = 1.0
+fila.0.tempo_servico_max = 2.0
+fila.0.chegada_min = 2.0
+fila.0.chegada_max = 4.0
+fila.0.rota.1 = 0.8
+fila.0.rota.2 = 0.2
+
+# Fila 1 (G/G/2/5)
+
+fila.1.capacidade = 5
+fila.1.servidores = 2
+fila.1.tempo_servico_min = 4.0
+fila.1.tempo_servico_max = 8.0
+fila.1.rota.0 = 0.3
+fila.1.rota.saida = 0.2
+fila.1.rota.2 = 0.5
+
+# Fila 2 (G/G/2/10)
+fila.2.capacidade = 10
+fila.2.servidores = 2
+fila.2.tempo_servico_min = 5.0
+fila.2.tempo_servico_max = 15
+fila.2.rota.0 = 0.7
+fila.2.rota.saida = 0.3

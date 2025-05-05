@@ -1,0 +1,44 @@
+Resultados da Simulação
+======================
+
+Tempo total simulado: 50000.00
+Total de clientes processados: 15624
+Total de clientes rejeitados: 947 (6.06%)
+Total de clientes que concluíram: 3451
+
+Estatísticas por Fila
+--------------------
+
+Fila 0:
+  Capacidade: Infinita
+  Servidores: 1
+  Clientes atendidos: 21753
+  Tempo médio de espera: 2.7631
+  Taxa de utilização: 36.2543%
+
+  Rotas:
+    -> Fila 1: 80.00%
+    -> Fila 2: 20.00%
+
+Fila 1:
+  Capacidade: 5
+  Servidores: 2
+  Clientes atendidos: 16972
+  Tempo médio de espera: 4.2157
+  Taxa de utilização: 82.7426%
+
+  Rotas:
+    -> Fila 0: 30.00%
+    -> Fila 2: 50.00%
+    -> Saída do sistema: 20.00%
+
+Fila 2:
+  Capacidade: 10
+  Servidores: 2
+  Clientes atendidos: 12047
+  Tempo médio de espera: 9.6843
+  Taxa de utilização: 94.3578%
+
+  Rotas:
+    -> Fila 0: 70.00%
+    -> Saída do sistema: 30.00%

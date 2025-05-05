@@ -1,0 +1,20 @@
+# Configuração para validação do simulador
+tempo_simulacao = 50000.0
+semente = 42
+
+# Primeira fila - Recebe clientes do exterior
+fila.0.capacidade = 4
+fila.0.servidores = 2
+fila.0.tempo_servico_min = 4.0
+fila.0.tempo_servico_max = 7.0
+fila.0.chegada_min = 2.0
+fila.0.chegada_max = 3.0
+fila.0.rota.1 = 0.7
+fila.0.rota.saida = 0.3
+
+# Segunda fila - Capacidade infinita
+fila.1.capacidade = -1
+fila.1.servidores = 1
+fila.1.tempo_servico_min = 4.0
+fila.1.tempo_servico_max = 8.0
+fila.1.rota.saida = 1.0

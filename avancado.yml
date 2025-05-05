@@ -1,0 +1,50 @@
+# Configuração avançada para simulação de redes de filas com múltiplos roteamentos
+tempo_simulacao: 20000.0  # Tempo total da simulação
+semente: 54321            # Semente para o gerador de números pseudoaleatórios
+
+# Definição das filas
+filas:
+  
+  # Fila de entrada principal
+  fila0:
+    capacidade: 10         # Capacidade máxima
+    servidores: 3          # Número de servidores
+    tempo_servico_min: 3.0 # Tempo mínimo de serviço
+    tempo_servico_max: 6.0 # Tempo máximo de serviço
+    chegada_min: 1.5       # Tempo mínimo entre chegadas
+    chegada_max: 3.0       # Tempo máximo entre chegadas
+    rotas:
+      fila1: 0.3           # 30% dos clientes vão para a fila1
+      fila2: 0.5           # 50% dos clientes vão para a fila2
+      saida: 0.2           # 20% dos clientes saem do sistema
+  
+  # Primeira fila secundária
+  fila1:
+    capacidade: 5          # Capacidade máxima
+    servidores: 2          # Número de servidores
+    tempo_servico_min: 4.0 # Tempo mínimo de serviço
+    tempo_servico_max: 7.0 # Tempo máximo de serviço
+    rotas:
+      fila3: 0.8           # 80% dos clientes vão para a fila3
+      saida: 0.2           # 20% dos clientes saem do sistema
+  
+  # Segunda fila secundária
+  fila2:
+    capacidade: 8          # Capacidade máxima
+    servidores: 3          # Número de servidores
+    tempo_servico_min: 2.0 # Tempo mínimo de serviço
+    tempo_servico_max: 5.0 # Tempo máximo de serviço
+    rotas:
+      fila3: 0.6           # 60% dos clientes vão para a fila3
+      fila0: 0.1           # 10% dos clientes voltam para a fila0 (ciclo)
+      saida: 0.3           # 30% dos clientes saem do sistema
+  
+  # Fila final
+  fila3:
+    capacidade: -1         # Capacidade infinita
+    servidores: 4          # Número de servidores
+    tempo_servico_min: 5.0 # Tempo mínimo de serviço
+    tempo_servico_max: 10.0 # Tempo máximo de serviço
+    rotas:
+      fila0: 0.2           # 20% dos clientes voltam para a fila0 (ciclo)
+      saida: 0.8           # 80% dos clientes saem do sistema

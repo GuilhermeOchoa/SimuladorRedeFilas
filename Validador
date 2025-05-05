@@ -1,0 +1,68 @@
+import java.io.FileWriter;
+import java.io.IOException;
+
+/**
+ * Classe para validar o simulador com o modelo especificado.
+ * Versão atualizada para incluir estatísticas de distribuição de estados.
+ */
+public class Validador {
+    
+    public static void main(String[] args) {
+        try {
+            System.out.println("Iniciando validação do simulador...");
+            
+            // Caminho para o arquivo de configuração
+            String arquivoConfig = "config-rede-ajustada.txt";
+            
+            // Executa a simulação
+            Escalonador escalonador = Simulador.executarSimulacao(arquivoConfig);
+            
+            // Salva os resultados em um arquivo
+            salvarResultados(escalonador, "resultados_validacao.txt");
+            
+            // Salva apenas a distribuição de estados em um arquivo separado
+            salvarDistribuicaoEstados(escalonador, "distribuicao_estados.txt");
+            
+            System.out.println("Validação concluída. Resultados salvos em 'resultados_validacao.txt' e 'distribuicao_estados.txt'");
+            
+        } catch (IOException e) {
+            System.err.println("Erro ao executar a validação: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Salva os resultados da simulação em um arquivo.
+     * @param escalonador Escalonador após simulação
+     * @param nomeArquivo Nome do arquivo para salvar os resultados
+     * @throws IOException Se ocorrer erro ao escrever no arquivo
+     */
+    private static void salvarResultados(Escalonador escalonador, String nomeArquivo) throws IOException {
+        try (FileWriter writer = new FileWriter(nomeArquivo)) {
+            writer.write(escalonador.salvarResultados());
+        }
+    }
+    
+    /**
+     * Salva apenas a distribuição de estados em um arquivo.
+     * @param escalonador Escalonador após simulação
+     * @param nomeArquivo Nome do arquivo para salvar os resultados
+     * @throws IOException Se ocorrer erro ao escrever no arquivo
+     */
+    private static void salvarDistribuicaoEstados(Escalonador escalonador, String nomeArquivo) throws IOException {
+        try (FileWriter writer = new FileWriter(nomeArquivo)) {
+            ColetadorEstatisticas coletor = escalonador.getColetorEstados();
+            
+            for (int i = 0; i <= coletor.getEstadoMaximoRegistrado(); i++) {
+                double percentual = coletor.getPercentualEmEstado(i);
+                double tempo = coletor.getTempoEmEstado(i);
+                
+                if (tempo > 0) {
+                    writer.write(String.format("Estado %d: %.2f%% (Tempo: %.2f)\n", i, percentual, tempo));
+                }
+            }
+            
+            writer.write(String.format("\nTempo Total de Simulação: %.2f", coletor.getTempoTotalSimulacao()));
+        }
+    }
+}
