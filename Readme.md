@@ -36,26 +36,36 @@ java Simulador caminho/para/configuracao.yml
 
 ## Formato do Arquivo de Configuração
 
-O arquivo de configuração YAML deve seguir o seguinte formato:
+O arquivo de configuração txt deve seguir o seguinte formato:
 
-```yaml
-tempo_simulacao: [tempo total da simulação]
-semente: [semente para o gerador de números aleatórios]
+```txt
 
-filas:
-  fila0:
-    capacidade: [capacidade máxima da fila (-1 para infinita)]
-    servidores: [número de servidores]
-    tempo_servico_min: [tempo mínimo de serviço]
-    tempo_servico_max: [tempo máximo de serviço]
-    chegada_min: [tempo mínimo entre chegadas (somente para filas de entrada)]
-    chegada_max: [tempo máximo entre chegadas (somente para filas de entrada)]
-    rotas:
-      fila1: [probabilidade de ir para fila1]
-      fila2: [probabilidade de ir para fila2]
-      saida: [probabilidade de sair do sistema]
-  
-  fila1:
+/**
+ * Formato do arquivo de configuração config.txt:
+ * 
+ * 3                   # Número de filas
+ * 
+ * # capacidade numServ minCheg maxCheg minAtend maxAtend
+ * 4 1 2.0 4.0 1.0 2.0  # Fila 1: G/G/1 com capacidade 4
+ * 5 2 0.0 0.0 4.0 8.0  # Fila 2: G/G/2/5 (tempos de chegada não usados)
+ * 10 2 0.0 0.0 5.0 15.0 # Fila 3: G/G/2/10 (tempos de chegada não usados)
+ * 
+ * # Matriz de roteamento (origem destino probabilidade)
+ * # Origem 0 = mundo externo
+ * # Destino 0 = saída do sistema
+ * 
+ * # Da Fila 1 (índice 1)
+ * 1 2 0.8  # 80% da Fila 1 vão para Fila 2
+ * 1 3 0.2  # 20% da Fila 1 vão para Fila 3
+ * 
+ * # Da Fila 2 (índice 2)
+ * 2 0 0.5  # 50% da Fila 2 saem do sistema
+ * 2 1 0.3  # 30% da Fila 2 voltam para Fila 1
+ * 
+ * # Da Fila 3 (índice 3)
+ * 3 2 0.7  # 70% da Fila 3 vão para Fila 2
+ * 3 0 0.3  # 30% da Fila 3 saem do sistema
+ */
     # ...configuração similar...
 ```
 
