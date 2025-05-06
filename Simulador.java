@@ -53,18 +53,23 @@ public void gerarRelatorioArquivo(String nomeArquivo) {
             Fila fila = filas.get(i);
             writer.println("*********************************************************");
             
-            // Nome da fila e caracterização
-            String nomeConfig;
-            if (i == 0) {
-                nomeConfig = String.format("FILA1 (G/G/1)");
-                writer.println("Queue:   " + nomeConfig);
+            // Nome da fila e caracterização usando notação de Kendall
+            // Formato: G/G/m/K onde m é número de servidores e K é capacidade
+            String nomeConfig = String.format("FILA%d (G/G/%d/%d)", 
+                                             i+1, 
+                                             fila.Servers(), 
+                                             fila.Capacity());
+            
+            // Caso especial para fila sem capacidade finita (G/G/m)
+            if (fila.Capacity() == Integer.MAX_VALUE) {
+                nomeConfig = String.format("FILA%d (G/G/%d)", i+1, fila.Servers());
+            }
+            
+            writer.println("Queue:   " + nomeConfig);
+            
+            // Só imprime os tempos de chegada para filas que têm chegadas externas
+            if (fila.getMinChegada() > 0 || fila.getMaxChegada() > 0) {
                 writer.printf("Arrival: %.1f ... %.1f\n", fila.getMinChegada(), fila.getMaxChegada());
-            } else if (i == 1) {
-                nomeConfig = String.format("FILA2 (G/G/2/5)");
-                writer.println("Queue:   " + nomeConfig);
-            } else {
-                nomeConfig = String.format("FILA3 (G/G/2/10)");
-                writer.println("Queue:   " + nomeConfig);
             }
             
             writer.printf("Service: %.1f ... %.1f\n", fila.getMinAtendimento(), fila.getMaxAtendimento());
@@ -82,6 +87,18 @@ public void gerarRelatorioArquivo(String nomeArquivo) {
             
             // Número de perdas
             writer.println("Number of losses: " + fila.getPerdidos());
+            
+            // Calcular e mostrar índices de desempenho adicionais
+            double utilizacao = calcularUtilizacao(fila, temposEstado);
+            double populacaoMedia = calcularPopulacaoMedia(temposEstado);
+            double tempoMedioSistema = estimarTempoMedioNoSistema(fila, populacaoMedia);
+            
+            writer.println("*********************************************************");
+            writer.println("Performance Metrics:");
+            writer.printf("Utilization: %5.2f%%\n", utilizacao * 100);
+            writer.printf("Average Population: %5.2f clients\n", populacaoMedia);
+            writer.printf("Estimated Average Response Time: %5.2f minutes\n", tempoMedioSistema);
+            writer.println("*********************************************************");
         }
         
         writer.println("=========================================================");
@@ -91,6 +108,49 @@ public void gerarRelatorioArquivo(String nomeArquivo) {
         System.out.println("Relatório gerado com sucesso no arquivo: " + nomeArquivo);
     } catch (IOException e) {
         System.err.println("Erro ao gerar relatório: " + e.getMessage());
+    }
+}
+
+/**
+ * Calcula a utilização dos servidores com base nos tempos dos estados
+ * @param fila A fila analisada
+ * @param temposEstado Array com os tempos em cada estado
+ * @return Taxa de utilização (0-1)
+ */
+private double calcularUtilizacao(Fila fila, double[] temposEstado) {
+    double tempoTotalDesocupado = temposEstado[0];
+    return 1.0 - (tempoTotalDesocupado / tempoSimulacao);
+}
+
+/**
+ * Calcula a população média com base nos tempos dos estados
+ * @param temposEstado Array com os tempos em cada estado
+ * @return População média
+ */
+private double calcularPopulacaoMedia(double[] temposEstado) {
+    double soma = 0.0;
+    for (int i = 0; i < temposEstado.length; i++) {
+        soma += i * temposEstado[i];
+    }
+    return soma / tempoSimulacao;
+}
+
+/**
+ * Estima o tempo médio que um cliente passa no sistema (Lei de Little)
+ * @param fila A fila analisada
+ * @param populacaoMedia População média calculada
+ * @return Tempo médio estimado no sistema
+ */
+private double estimarTempoMedioNoSistema(Fila fila, double populacaoMedia) {
+    // Vazão estimada (clientes por unidade de tempo)
+    double taxaChegadaEfetiva = populacaoMedia / 
+        ((fila.getMinAtendimento() + fila.getMaxAtendimento()) / 2.0);
+    
+    // Aplicando a Lei de Little: E[N] = λ * E[T]
+    if (taxaChegadaEfetiva > 0) {
+        return populacaoMedia / taxaChegadaEfetiva;
+    } else {
+        return 0.0;
     }
 }
     /**
